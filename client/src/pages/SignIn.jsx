@@ -1,5 +1,16 @@
-import React from "react";
-import styled from "styled-components";
+import axios from 'axios';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import {
+  loginFailure,
+  loginStart,
+  loginSuccess,
+  signupError,
+  signupLoading,
+  signupSuccess,
+} from '../redux/userSlice';
 
 const Container = styled.div`
   display: flex;
@@ -29,10 +40,15 @@ const SubTitle = styled.h2`
   font-weight: 300;
 `;
 
+const Form = styled.form`
+  padding: 5px;
+`;
+
 const Input = styled.input`
   border: 1px solid ${({ theme }) => theme.soft};
   border-radius: 3px;
   padding: 10px;
+  margin-bottom: 10px;
   background-color: transparent;
   width: 100%;
   color: ${({ theme }) => theme.text};
@@ -64,19 +80,67 @@ const Link = styled.span`
 `;
 
 const SignIn = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    dispatch(loginStart());
+    try {
+      const res = await axios.post('/auth/signin', { email, password });
+      console.log(res.data);
+      dispatch(loginSuccess(res.data));
+      navigate('/');
+    } catch (err) {
+      dispatch(loginFailure());
+    }
+  };
+
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    dispatch(signupLoading());
+    try {
+      const data = await axios.post('/auth/signup', { name, email, password });
+      //console.log(data);
+      dispatch(signupSuccess(data));
+      navigate('/');
+    } catch (err) {
+      dispatch(signupError());
+    }
+  };
+
   return (
     <Container>
       <Wrapper>
         <Title>Sign in</Title>
-        <SubTitle>to continue to LamaTube</SubTitle>
-        <Input placeholder="username" />
-        <Input type="password" placeholder="password" />
-        <Button>Sign in</Button>
+        <SubTitle>to continue to BDTUBE</SubTitle>
+        <Input placeholder="email" onChange={(e) => setEmail(e.target.value)} />
+        <Input
+          type="password"
+          placeholder="password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Button onClick={handleLogin}>Sign in</Button>
         <Title>or</Title>
-        <Input placeholder="username" />
-        <Input placeholder="email" />
-        <Input type="password" placeholder="password" />
-        <Button>Sign up</Button>
+        <Form onSubmit={submitHandler}>
+          <Input
+            placeholder="username"
+            onChange={(e) => setName(e.target.value)}
+          />
+          <Input
+            placeholder="email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            type="password"
+            placeholder="password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button type="submit">Sign up</Button>
+        </Form>
       </Wrapper>
       <More>
         English(USA)
