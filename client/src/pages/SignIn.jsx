@@ -1,7 +1,6 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import {
   loginFailure,
@@ -11,6 +10,11 @@ import {
   signupLoading,
   signupSuccess,
 } from '../redux/userSlice';
+
+import { auth, provider } from '../firebase';
+import { signInWithPopup } from 'firebase/auth';
+import { async } from '@firebase/util';
+import { useNavigate } from 'react-router-dom';
 
 const Container = styled.div`
   display: flex;
@@ -99,6 +103,29 @@ const SignIn = () => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    dispatch(loginStart());
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        axios
+          .post('/auth/google', {
+            name: result.user.displayName,
+            email: result.user.email,
+            img: result.user.photoURL,
+          })
+          .then((res) => {
+            console.log(res);
+            dispatch(loginSuccess(res.data));
+            navigate('/');
+          });
+      })
+      .catch((error) => {
+        dispatch(loginFailure());
+      });
+  };
+
+  //TODO: REGISTER FUNCTIONALITY
+
   const submitHandler = async (e) => {
     e.preventDefault();
     dispatch(signupLoading());
@@ -124,6 +151,8 @@ const SignIn = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
         <Button onClick={handleLogin}>Sign in</Button>
+        <Title>or</Title>
+        <Button onClick={signInWithGoogle}>Signin with Google</Button>
         <Title>or</Title>
         <Form onSubmit={submitHandler}>
           <Input
